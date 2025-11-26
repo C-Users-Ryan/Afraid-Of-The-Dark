@@ -3,8 +3,9 @@
 public class SpotLightMovement : MonoBehaviour
 {
     [Header("References")]
-    public Transform objectToMove;
-    public Collider surfaceCollider;
+    public Transform objectToMove;          // The moving cylinder
+    public Collider surfaceCollider;        // The plant collider surface
+    public Transform spotlightTransform;    // The actual stationary spotlight object
 
     [Header("Movement Settings")]
     public float moveSpeed = 2f;
@@ -41,22 +42,18 @@ public class SpotLightMovement : MonoBehaviour
     {
         if (objectToMove == null) return;
 
-        // If leaning is on, handle the delay first
+        // Speed leaning logic
         if (useSpeedLeaning)
         {
             if (!isLeaningActive)
             {
                 leanDelayTimer -= Time.deltaTime;
 
-                // When the timer expires → activate leaning
                 if (leanDelayTimer <= 0f)
-                {
                     isLeaningActive = true;
-                }
             }
             else
             {
-                // Smooth acceleration toward target speed
                 currentSpeed = Mathf.MoveTowards(
                     currentSpeed,
                     targetSpeed,
@@ -69,17 +66,22 @@ public class SpotLightMovement : MonoBehaviour
             currentSpeed = moveSpeed;
         }
 
-        // Move toward the target
+        // Move object across surface
         objectToMove.position = Vector3.MoveTowards(
             objectToMove.position,
             targetPosition,
             currentSpeed * Time.deltaTime
         );
 
-        // If the object is close → pick a new point (but DO NOT reset speed)
         if (Vector3.Distance(objectToMove.position, targetPosition) < stoppingDistance)
         {
             PickNewRandomPoint();
+        }
+
+        // --- NEW FEATURE: SpotLight rotation tracking ---
+        if (spotlightTransform != null)
+        {
+            spotlightTransform.LookAt(objectToMove.position);
         }
     }
 
@@ -102,6 +104,7 @@ public class SpotLightMovement : MonoBehaviour
             }
         }
 
+        // Retry if invalid
         PickNewRandomPoint();
     }
 }
